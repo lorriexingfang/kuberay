@@ -94,6 +94,19 @@ func TestGenerateHashWithoutReplicasAndWorkersToDelete(t *testing.T) {
 	hash5, err := utils.GenerateHashWithoutReplicasAndWorkersToDelete(cluster.Spec)
 	require.NoError(t, err)
 	assert.Equal(t, hash1, hash5)
+
+	// NodeSelector injected by external controllers (e.g., Kueue ResourceFlavor nodeLabels) should not change the hash.
+	cluster.Spec.HeadGroupSpec.Template.Spec.SchedulingGates = nil
+	cluster.Spec.WorkerGroupSpecs[0].Template.Spec.SchedulingGates = nil
+	cluster.Spec.HeadGroupSpec.Template.Spec.NodeSelector = map[string]string{
+		"instance-type": "spot",
+	}
+	cluster.Spec.WorkerGroupSpecs[0].Template.Spec.NodeSelector = map[string]string{
+		"instance-type": "spot",
+	}
+	hash6, err := utils.GenerateHashWithoutReplicasAndWorkersToDelete(cluster.Spec)
+	require.NoError(t, err)
+	assert.Equal(t, hash1, hash6)
 }
 
 func TestIsHeadPodRunningAndReady(t *testing.T) {

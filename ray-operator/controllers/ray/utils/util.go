@@ -645,10 +645,11 @@ func GenerateHashWithoutReplicasAndWorkersToDelete(rayClusterSpec rayv1.RayClust
 	// Autoscaler will update `Replicas` and `WorkersToDelete` when scaling up/down.
 	updatedRayClusterSpec := rayClusterSpec.DeepCopy()
 
-	// Mute tolerations and scheduling gates for all pod templates.
+	// Mute tolerations, node selectors, and scheduling gates for all pod templates.
 	// External controllers like Kueue may inject these fields into the RayCluster
 	// after creation, which should not trigger a new RayCluster preparation.
 	updatedRayClusterSpec.HeadGroupSpec.Template.Spec.Tolerations = nil
+	updatedRayClusterSpec.HeadGroupSpec.Template.Spec.NodeSelector = nil
 	updatedRayClusterSpec.HeadGroupSpec.Template.Spec.SchedulingGates = nil
 
 	for i := 0; i < len(updatedRayClusterSpec.WorkerGroupSpecs); i++ {
@@ -657,6 +658,7 @@ func GenerateHashWithoutReplicasAndWorkersToDelete(rayClusterSpec rayv1.RayClust
 		updatedRayClusterSpec.WorkerGroupSpecs[i].MinReplicas = nil
 		updatedRayClusterSpec.WorkerGroupSpecs[i].ScaleStrategy.WorkersToDelete = nil
 		updatedRayClusterSpec.WorkerGroupSpecs[i].Template.Spec.Tolerations = nil
+		updatedRayClusterSpec.WorkerGroupSpecs[i].Template.Spec.NodeSelector = nil
 		updatedRayClusterSpec.WorkerGroupSpecs[i].Template.Spec.SchedulingGates = nil
 	}
 	updatedRayClusterSpec.UpgradeStrategy = nil
